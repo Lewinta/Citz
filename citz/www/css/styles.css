@@ -198,3 +198,19 @@ a:visited {
 .wizard>.steps>ul>li {
     width: 100%;
 }
+
+/* Confirmation ticket print view */
+
+@media print {
+    #confirmation_step {
+        box-shadow: 0 0 1in -0.25in rgba(0, 0, 0, 0.5);
+        padding:2mm;
+        margin: 0 auto;
+        width: 44mm;
+        background: #FFF;
+        text-align: center;
+        display: flex; 
+        flex-flow: column wrap;
+        max-width: 700px;
+    }
+}

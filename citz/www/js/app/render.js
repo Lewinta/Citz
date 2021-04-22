@@ -1,12 +1,12 @@
 var globalObject = {
     api: {
-        BaseUri: "https://dev-tbb.tzcode.tech",
-        baseHeaders: { "Authorization": "token a9382fe44c435f1:189cb7601b9db29" },
+        BaseUri: "",
+        baseHeaders: { "Authorization": "token a9382fe44c435f1:ade7fd03220ab5e" },
         login: "/api/method/login",
         events: "/api/method/citz.citz.public_methods.get_events",
         services: `/api/resource/Item?filters={"item_group":"Servicios"}&fields=["name","item_name","item_group", "duration", "item_category"]`,
         branches: `/api/method/citz.citz.public_methods.branches`,
-        responsibles: `/api/resource/User?fields=["name",%20"first_name",%20"last_name"]`,
+        responsibles: `/api/method/citz.citz.public_methods.responsibles`,
         event: '/api/method/citz.citz.public_methods.event'
     },
     branch: {
@@ -34,9 +34,9 @@ var globalObject = {
     branches: [],
     dayOfWeekNames: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 }
-function dumpServices(services) { 
+function dumpServices(services) {
     return 'Services: \n' + services.reduce((acc, curr) => {
-        return `${curr.item_name}\n`
+        return `${acc}${curr.item_name}\n`
     }, "")
 }
 function renderBranches(branches) {
@@ -92,7 +92,7 @@ function addEvents() {
         else {
             globalObject.totalDuration -= parseInt($(this).data("duration"))
             const service_index = globalObject.selected_services.findIndex(s => s.name == $(this).data("name")) > -1
-            if (service_index) globalObject.selected_services.splice(service_index, 1)  
+            if (service_index) globalObject.selected_services.splice(service_index, 1)
         }
         document.getElementById("durationTotal").innerText = `Duración total: ${globalObject.totalDuration} minutos`
     })
@@ -102,7 +102,8 @@ async function fetchData(entity, method = "GET", headers = null, params = "", bo
     return fetch(`${globalObject.api.BaseUri}${globalObject.api[entity]}${params ? "?" + params : ""}`, {
         method,
         headers: { ...globalObject.api.baseHeaders, ...headers },
-        body
+        body,
+        credentials: "omit"
     })
         .then(r => {
             if (r.status >= 400) return r.json()
@@ -133,7 +134,8 @@ function selectionButtons({ container, name, displayName, contextClass, innerTex
 // Individual Renders
 
 async function renderResponsibles(responsibles) {
-    responsibles = await fetchData("responsibles")
+    responsibles = await fetchData("responsibles", "GET", null, `branch=${globalObject.branch.name}`)
+    $("#responsibles").empty()
     responsibles.forEach((item) => {
         $("#responsibles").append(`<a class="btn btn-selection responsible" data-name="${item.name}" data-selected="0" href='#'><b class="responsible_name">${item.first_name} ${item.last_name}</b></a>`)
     })
@@ -142,13 +144,16 @@ async function renderResponsibles(responsibles) {
         e.stopImmediatePropagation()
         $(".responsible.selected").removeClass("selected")
         $(this).addClass("selected")
+        const previous = globalObject.responsible;
         globalObject.responsible = responsibles.find((item) => item.name == $(this).data("name"))
+        if (JSON.stringify(globalObject.responsible) !== JSON.stringify(previous)){
+            $("#hourpicker .hour-button").remove()
+        }
         nextStep()
     })
 }
 
 function renderDateSection() {
-
     var unavailableDates = ["9-4-2021", "14-4-2021", "17-4-2021"];
 
     function unavailable(date) {
@@ -159,38 +164,38 @@ function renderDateSection() {
             return [false, "", "Unavailable"];
         }
     }
-    $("#datepicker").datepicker({
-        minDate: 0,
-        // beforeShowDay: unavailable,
-        onSelect: async function (dateText, instance) {
-            globalObject.selected_date = `${instance.selectedYear}-${instance.selectedMonth + 1}-${instance.selectedDay}`
-            const hours = await getAvailability({
-                selected_date: globalObject.selected_date,
-                responsible: globalObject.responsible.name
-            })
-            $("#hourpicker .hour-button").remove()
-            for (let hour of hours) {
-                const hour_element = $(`<li class="hour-button"><a data-value='${hour}' href='javascript:void(0);'>${new Date(`2000-01-01 ${hour}`).toLocaleTimeString('en-US', {hour: "2-digit", minute: '2-digit'})}</a></li>`);
-                if (hour < "13:00:00") {
-                    $("ul.morning").append(hour_element)
+    if (!$("#datepicker").hasClass("hasDatepicker")) {
+        $("#datepicker").datepicker({
+            minDate: 0,
+            // beforeShowDay: unavailable,
+            onSelect: async function (dateText, instance) {
+                globalObject.selected_date = `${(instance.selectedMonth + 1) < 10 ? "0" + (instance.selectedMonth + 1): instance.selectedMonth}/${instance.selectedDay}/${instance.selectedYear}`
+                const hours = await getAvailability({
+                    selected_date: globalObject.selected_date,
+                    responsible: globalObject.responsible.name
+                })
+                for (let hour of hours) {
+                    const hour_element = $(`<li class="hour-button"><a data-value='${hour}' href='javascript:void(0);'>${new Date('01/01/1999 '+hour).toLocaleTimeString('en-US', { hour: "2-digit", minute: '2-digit' })}</a></li>`);
+                    if (hour < "13:00:00") {
+                        $("ul.morning").append(hour_element)
+                    }
+                    else if (hour < "17:00:00") {
+                        $("ul.afternoon").append(hour_element)
+                    }
+                    else {
+                        $("ul.evening").append(hour_element)
+                    }
+                    // $("#hourpicker").append(`<div class="hour-button" data-value="${hour}" >${new Date(`2000-01-01 ${hour}`).toLocaleTimeString()}</div>`)
                 }
-                else if (hour < "17:00:00") {
-                    $("ul.afternoon").append(hour_element)
-                }
-                else {
-                    $("ul.evening").append(hour_element)
-                }
-                // $("#hourpicker").append(`<div class="hour-button" data-value="${hour}" >${new Date(`2000-01-01 ${hour}`).toLocaleTimeString()}</div>`)
+
+                $("li.hour-button a").click(function (e) {
+                    e.preventDefault()
+                    globalObject.selected_hour = $(this).data("value")
+                    nextStep()
+                })
             }
-
-            $("li.hour-button a").click(function (e) {
-                e.preventDefault()
-                globalObject.selected_hour = $(this).data("value")
-                nextStep()
-            })
-        }
-    });
-
+        });
+    }
 }
 
 function renderUserDataSection() {
@@ -200,46 +205,46 @@ function renderUserDataSection() {
 function renderConfirmationStep() {
     const confirmationUl = $(`<ul id="confirm_ul"></ul>`)
     const LiArray = [
-    {
-        handler: () => {
-            const li = $("<li></li>")
-            li.append("<label>Servicios:</label>")
-            const span = $("<span></span>")
-            
-            const innerUl = $("<ul></ul>")
-            
-            globalObject.selected_services.forEach(item => {
-                innerUl.append(`<li>${item.item_name} - ${item.duration} Minutos</li>`)
-            })
-            span.append(innerUl)
-            li.append(span)
-            return li; 
-        }
-    }, 
-    {
-        label: "Proveedor:",
-        value: `${globalObject.responsible.first_name} ${globalObject.responsible.last_name}`
-    },
-    {
-        label: "Fecha y Hora:",
-        value: `${new Date(globalObject.selected_date + " " + globalObject.selected_hour).toLocaleString()}`
-    },
-    {
-        handler: () => {
+        {
+            handler: () => {
+                const li = $("<li></li>")
+                li.append("<label>Servicios:</label>")
+                const span = $("<span></span>")
 
-            const li = $("<li></li>")
-            li.append("<label>Tus Datos:</label>")
-            const span = $("<span></span>")
-            span.append(`<ul></ul>`)
-            .append(`<li>${$('#fname').val() + " " + $('#lname').val()}</li>`)
-            .append(`<li>${$('#phone').val()}</li>`)
-            .append(`<li>${$('#email').val()}</li>`)
-            li.append(span)
-            return li; 
+                const innerUl = $("<ul></ul>")
+
+                globalObject.selected_services.forEach(item => {
+                    innerUl.append(`<li>${item.item_name} - ${item.duration} Minutos</li>`)
+                })
+                span.append(innerUl)
+                li.append(span)
+                return li;
+            }
+        },
+        {
+            label: "Proveedor:",
+            value: `${globalObject.responsible.first_name} ${globalObject.responsible.last_name}`
+        },
+        {
+            label: "Fecha y Hora:",
+            value: `${new Date(globalObject.selected_date + " " + globalObject.selected_hour).toLocaleString()}`
+        },
+        {
+            handler: () => {
+
+                const li = $("<li></li>")
+                li.append("<label>Tus Datos:</label>")
+                const span = $("<span></span>")
+                span.append(`<ul></ul>`)
+                    .append(`<li>${globalObject.userData.first_name + " " + globalObject.userData.last_name}</li>`)
+                    .append(`<li>${globalObject.userData.phone}</li>`)
+                    .append(`<li>${globalObject.userData.email}</li>`)
+                li.append(span)
+                return li;
+            }
         }
-    }
     ];
-    for(let block of LiArray) {
+    for (let block of LiArray) {
         if (block.handler) {
             confirmationUl.append(block.handler())
         }
@@ -253,4 +258,16 @@ function renderConfirmationStep() {
 
     $("#confirmation_step").prepend(confirmationUl)
     $("#confirm_btn").click(confirmationButton)
+}
+
+
+function printElement(e) {
+    var ifr = document.createElement('iframe');
+    ifr.style = 'height: 0px; width: 0px; position: absolute'
+    document.body.appendChild(ifr);
+
+    $(e).clone().appendTo(ifr.contentDocument.body);
+    ifr.contentWindow.print();
+
+    ifr.parentElement.removeChild(ifr);
 }

@@ -37,7 +37,7 @@ form.steps({
     return form.valid();
   },
   onFinished: function(event, currentIndex) {
-    alert("Submitted!");
+    
   }
 }).validate({
   errorPlacement: function errorPlacement(error, element) {
