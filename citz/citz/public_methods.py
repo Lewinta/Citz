@@ -15,6 +15,7 @@ def get_events(date, responsible):
         DATE(starts_on) = DATE(%(date)s)
             AND 
         responsible = %(responsible)s
+        ORDER BY starts_on ASC
     """, {"date": date, "responsible": responsible}, as_dict = 1)
 
 @frappe.whitelist()

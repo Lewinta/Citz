@@ -169,6 +169,7 @@ function renderDateSection() {
             minDate: 0,
             // beforeShowDay: unavailable,
             onSelect: async function (dateText, instance) {
+                $("#hourpicker .hour-button").remove()
                 globalObject.selected_date = `${(instance.selectedMonth + 1) < 10 ? "0" + (instance.selectedMonth + 1): instance.selectedMonth}/${instance.selectedDay}/${instance.selectedYear}`
                 const hours = await getAvailability({
                     selected_date: globalObject.selected_date,

@@ -22,10 +22,10 @@ function confirmationButton() {
     const event = getEventPayload();
     fetchData("event", "POST", { "Content-Type": "application/json", "Accept": "application/json" }, null, JSON.stringify(event))
         .then(r => {
-            $("body").empty().css({"text-align": "center"});
+            $("body").empty().css({ "text-align": "center" });
             $("body").append(`<div id='confirmation_step' class="confirm_appt" style="text-align: center; margin: 0 auto; display: flex; flex-flow: column wrap;" ></div>`)
             if (!r.name) {
-                $("#confirmation_step").prepend(`<div>Error: ${JSON.stringify(r)}</div>`)    
+                $("#confirmation_step").prepend(`<div>Error: ${JSON.stringify(r)}</div>`)
                 return false;
             }
             $("#confirmation_step").prepend(`
@@ -34,37 +34,44 @@ function confirmationButton() {
             <p style="font-size: 13px;">Debe mostrar este documento al llegar</p>
             <div id="confirmation_qr" style="margin: 0 50%; position: relative;"></div>`)
             qrcode = new QRCode("confirmation_qr", r.name)
+            $("#confirmation_step").append(`<br/><button class="btn btn-primary"  style="text-align: center; margin: 0 auto; width: 50%" id="new_appointment">Hacer otra cita</button>`)
+            $("#new_appointment").click(() => window.location.replace("/cita"))
             // printElement(document.getElementById("confirmation_step"))
-        
+
         })
         .catch(r => console.log(r))
 }
 
+function ToFrappeDateStringFormat(date) {
+    return `${date.getFullYear()}-${("0" + (date.getMonth() + 1)).slice(-2)}-${("0" + date.getDate()).slice(-2)}`
+}
 async function getAvailability({ selected_date, responsible }) {
-    const res = await fetch(`${globalObject.api.BaseUri}${globalObject.api.events}?responsible=${responsible}&date=${selected_date}`, {
-        method: "GET",
-        headers: {
-            ...globalObject.api.baseHeaders,
-            "Content-Type": "application/json"
-        },
-    }).then(r => {
-        console.log(r)
-        return r.json()
-    })
-    .catch(err => {
-        console.error("Error de Frappe: ", err)
-    })
-    console.log(res)
+
+    const sortHours = (i1, i2) => {
+        if (i1.from < i2.from) return -1
+        else if (i1.from == i2.from) return 0
+        else return 1
+    }
+    const ff_selected_date = ToFrappeDateStringFormat(new Date(globalObject.selected_date))
+    const message = await fetchData(
+        "events",
+        "GET",
+        { "Content-Type": "application/json" },
+        `responsible=${responsible}&date=${ff_selected_date}`
+    )
+
+
     const dateSchedule = globalObject.branch.schedule.filter(row => row.name == globalObject.dayOfWeekNames[new Date(selected_date).getDay()])[0]
-    
-    
+
+
     if (!dateSchedule || !dateSchedule.is_open)
         return [];
-    const busyHours = res.message
+
+    const busyHours = message
         .filter(row => {
             const from = row["starts_on"].replace(/\d{4}-\d{2}-\d{2}\s+/g, "")
             const to = row["ends_on"].replace(/\d{4}-\d{2}-\d{2}\s+/g, "")
-            
+
             return from >= dateSchedule.opening_time && to <= dateSchedule.closing_time;
         })
         .map(row => {
@@ -74,19 +81,17 @@ async function getAvailability({ selected_date, responsible }) {
                 to: row["ends_on"].replace(/\d{4}-\d{2}-\d{2}\s+/g, "")
             }
         })
-        busyHours.sort((i1, i2) => {
-            if (i1.from < i2.from) return -1
-            else if (i1.from == i2.from) return 0
-            else return 1
-        })
+    busyHours.sort(sortHours)
     console.log(busyHours)
-    
+
     let fromTemp = dateSchedule.opening_time;
-    const hoursAvailable = busyHours.map((item) => {
-        if (item.from == fromTemp) return null
-        
+    
+    const hoursAvailable = busyHours.map((item, idx) => {
+        // if this busy hour has been used and is not the first item
+        if (item.from == fromTemp && idx > 0) return null
+
         const fromDate = new Date("01/01/1999 " + item.from);
-        
+
         fromDate.setMinutes(fromDate.getMinutes() - 1)
         const result = {
             from: fromTemp,
@@ -97,16 +102,12 @@ async function getAvailability({ selected_date, responsible }) {
 
         return result;
     })
-    .filter(item => item)
-    hoursAvailable.sort((i1, i2) => {
-        if (i1.from < i2.from) return -1
-        else if (i1.from == i2.from) return 0
-        else return 1
-    })
+        .filter(item => item)
+    hoursAvailable.sort(sortHours)
     if (hoursAvailable.length == 0)
         hoursAvailable.push({ from: dateSchedule.opening_time, to: dateSchedule.closing_time })
     console.log(hoursAvailable)
-    
+
     return hoursAvailable.map((item) => {
         const fromDate = new Date(`01/01/1999 ${item.from}`)
         const toDate = new Date(`01/01/1999 ${item.to}`)
