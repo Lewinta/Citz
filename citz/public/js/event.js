@@ -3,6 +3,17 @@
 frappe.provide("frappe.desk");
 
 frappe.ui.form.on("Event", {
+	setup: function(frm) {
+		window.addEventListener('addParticipant', (event) => {
+			const payload = event.detail;
+			frm.add_child('event_participants', {
+				reference_doctype: 'Customer',
+				reference_docname: payload.name
+			})
+			frm.save();
+			frm.refresh_fields();
+		})
+	},
 	refresh: function (frm) {
 
 		frm.remove_custom_button(__('Add Contacts'), __("Add Participants"));
@@ -14,7 +25,6 @@ frappe.ui.form.on("Event", {
 		frm.remove_custom_button(__('Participants'))
 		frm.add_custom_button(__('Add Customer'), function () {
 			new frappe.desk.eventParticipants(frm, "Customer");
-
 		})
 
 		frm.custom_buttons[__('Add Customer')].addClass("btn-primary")
