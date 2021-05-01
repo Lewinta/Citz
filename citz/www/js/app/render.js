@@ -146,9 +146,11 @@ async function renderResponsibles(responsibles) {
         $(this).addClass("selected")
         const previous = globalObject.responsible;
         globalObject.responsible = responsibles.find((item) => item.name == $(this).data("name"))
+
         if (JSON.stringify(globalObject.responsible) !== JSON.stringify(previous)){
             $("#hourpicker .hour-button").remove()
         }
+
         nextStep()
     })
 }

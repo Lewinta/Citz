@@ -52,6 +52,7 @@ async function getAvailability({ selected_date, responsible }) {
         else if (i1.from == i2.from) return 0
         else return 1
     }
+
     const ff_selected_date = ToFrappeDateStringFormat(new Date(globalObject.selected_date))
     const message = await fetchData(
         "events",
@@ -60,19 +61,19 @@ async function getAvailability({ selected_date, responsible }) {
         `responsible=${responsible}&date=${ff_selected_date}`
     )
 
-
     const dateSchedule = globalObject.branch.schedule.filter(row => row.name == globalObject.dayOfWeekNames[new Date(selected_date).getDay()])[0]
-
+    const responsibleSchedule = globalObject.responsible.schedule.filter(row => row.day == globalObject.dayOfWeekNames[new Date(selected_date).getDay()])
 
     if (!dateSchedule || !dateSchedule.is_open)
         return [];
 
     const busyHours = message
         .filter(row => {
+
             const from = row["starts_on"].replace(/\d{4}-\d{2}-\d{2}\s+/g, "")
             const to = row["ends_on"].replace(/\d{4}-\d{2}-\d{2}\s+/g, "")
-
-            return from >= dateSchedule.opening_time && to <= dateSchedule.closing_time;
+            return from >= dateSchedule.opening_time &&
+                to <= dateSchedule.closing_time
         })
         .map(row => {
 
@@ -85,7 +86,7 @@ async function getAvailability({ selected_date, responsible }) {
     console.log(busyHours)
 
     let fromTemp = dateSchedule.opening_time;
-    
+
     const hoursAvailable = busyHours.map((item, idx) => {
         // if this busy hour has been used and is not the first item
         if (item.from == fromTemp && idx > 0) return null
@@ -103,6 +104,7 @@ async function getAvailability({ selected_date, responsible }) {
         return result;
     })
         .filter(item => item)
+        .filter(item => responsibleSchedule.some(responsible_slot => item.from >= responsible_slot.from_time && item.to <= responsible_slot.to_time))
     hoursAvailable.sort(sortHours)
     if (hoursAvailable.length == 0)
         hoursAvailable.push({ from: dateSchedule.opening_time, to: dateSchedule.closing_time })
