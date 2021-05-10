@@ -1,0 +1,216 @@
+html {
+    box-sizing: border-box;
+}
+
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+
+ul {
+    list-style: none;
+}
+
+
+
+a:link {
+    text-decoration: inherit;
+    color: inherit;
+    cursor: auto;
+}
+
+a:visited {
+    text-decoration: inherit;
+    color: inherit;
+    cursor: auto;
+}
+
+.btn {
+    padding: 0.8em;
+    margin: 3px;
+    display: block;
+    width: 100%;
+    position: relative;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: 0.3s;
+    text-align: left;
+    cursor: pointer impo !important;
+}
+
+.service::before {
+    content: "➕";
+}
+
+.selected::before {
+    content: "✅";
+}
+
+.btn-selections {
+    background-color: #fff;
+}
+
+#hourpicker {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    height: 340px;
+    overflow: auto;
+}
+
+#hourpicker ul {
+    float: left;
+    padding: 0 4% 0 0;
+    min-height: 205px;
+}
+
+#hourpicker ul.morning {
+    padding-left: 10px;
+}
+
+#hourpicker ul li {
+    font-size: 12px;
+    padding: 5px 0 0;
+    text-align: center;
+    margin-bottom: 0;
+    width: 100%;
+}
+
+#hourpicker ul li.title {
+    color: #444;
+    font-weight: 700;
+    text-align: center;
+    padding-top: 0;
+}
+
+#hourpicker ul li a {
+    color: #1a93d0;
+    font-weight: 700;
+    padding: 5px 0;
+    text-decoration: none;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    margin: 0;
+    width: 100%;
+    display: block;
+    cursor: pointer;
+}
+
+#hourpicker ul li a:hover {
+    text-decoration: none;
+    background: #fff;
+    border-color: #bbb;
+    box-shadow: 0 3px 5px rgb(0 0 0 / 7%);
+}
+
+/* Confirmation Step */
+
+#confirm_ul {
+    height: auto;
+    overflow: auto;
+    list-style: none;
+}
+
+.class_confirm_appt ul li, .confirm_appt ul li {
+    padding: 4px 0;
+    clear: both;
+    line-height: 22px;
+}
+
+.class_confirm_appt label, .confirm_appt label {
+    display: table;
+    width: 100px;
+    font-size: 12px;
+    color: #a7a7a7;
+    float: left;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.class_confirm_appt ul li span, .confirm_appt ul li span {
+    display: block;
+    line-height: 22px;
+    float: left;
+    max-width: 320px;
+    word-wrap: break-word;
+}
+
+/*
+ Arrows
+*/
+
+.arrow {
+    background-repeat: no-repeat;
+    cursor: pointer;
+    width: 50px;
+    height: 50px;
+    margin: 2em;
+}
+
+.arrow.arrow-left {
+    background-image: url(../img/prev.svg);
+}
+
+.arrow.arrow-right {
+    background-image: url(../img/next.svg);
+}
+
+.form-title-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Wizard */
+
+.wizard.vertical>.actions {
+    display: none;
+    float: none;
+    width: 100%;
+}
+
+.wizard>.steps>ul>li {
+    width: 50%;
+}
+
+.wizard>.steps a, .wizard>.steps a:hover, .wizard>.steps a:active {
+    margin-top: 0.5em;
+}
+
+.wizard.vertical>.steps, .wizard.vertical>.actions {
+    display: none;
+    float: none;
+    width: 100%;
+}
+
+.wizard.vertical>.content {
+    display: block;
+    float: none;
+    margin: 0 0.5em 0.5em;
+    background-color: #fff;
+    width: auto;
+}
+
+.form-title-mobile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.wizard>.steps>ul>li {
+    width: 100%;
+}
+
+/* Confirmation ticket print view */
+
+@media print {
+    #confirmation_step {
+        box-shadow: 0 0 1in -0.25in rgba(0, 0, 0, 0.5);
+        padding:2mm;
+        margin: 0 auto;
+        width: 44mm;
+        background: #FFF;
+        text-align: center;
+        display: flex; 
+        flex-flow: column wrap;
+        max-width: 700px;
+    }
+}

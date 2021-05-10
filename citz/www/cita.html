@@ -1,0 +1,164 @@
+﻿<!DOCTYPE html>
+<html class="no-js">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Citas</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/normalize.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/jquery.steps.css">
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="css/spinner.css">
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Js -->
+  <script src="lib/modernizr-2.6.2.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <!-- <script src="lib/jquery-1.9.1.min.js"></script>
+  <script src="lib/jquery.cookie-1.3.1.js"></script> -->
+  <script src="vendor/qrcodejs/qrcode.min.js"></script>
+  <script src="js/jquery.steps.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script src="js/steps-validations.js"></script>
+  <script src="js/app/events.js"></script>
+  <script src="js/app/render.js"></script>
+  <script src="js/cita.js"></script>
+  <script src="js/cita_form.js"></script>
+</head>
+
+<body>
+  <div class="spinner">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+  <div class="content">
+    <div class="form-title-mobile">
+      <div class="arrow arrow-left">
+      </div>
+      <h1 class="current-step"></h1>
+      <div class="arrow arrow-right">
+      </div>
+    </div>
+    <div id="wizard">
+      <h2>Sucursales</h2>
+      <section>
+        <h2>Por favor, seleccione una sucursal</h2>
+        <div class="btn-selections">
+          <div id="branches"></div>
+        </div>
+      </section>
+
+      <h2>Servicios</h2>
+      <section>
+        <h2>Por favor, seleccione los servicios deseado:</h2>
+
+        <div id="services">
+        </div>
+        <span id="durationTotal" class="show-duration">Duración total: 0 minutos</span>
+
+      </section>
+
+      <h2>Proveedores</h2>
+      <section>
+        <h2>Por favor, seleccione un proveedor</h2>
+        <div class="btn-selections">
+          <div id="responsibles">
+
+          </div>
+        </div>
+      </section>
+
+      <h2>Fecha</h2>
+      <section class="container">
+        <h2>Por favor, seleccione fecha y hora de su cita</h2>
+        <div class="row" style="position: relative;">
+          <div class="col-md-6" id="datepicker"></div>
+          <div class="col-md-6" id="hourpicker">
+            <ul class="morning">
+              <li class="title">Mañana</li>
+            </ul>
+            <ul class="afternoon">
+              <li class="title">Tarde</li>
+            </ul>
+            <ul class="evening">
+              <li class="title">Noche</li>
+            </ul>
+          </div>
+          <!-- <label for="start">Fecha:</label>
+
+          <input type="date" id="date" name="date" value="2021-01-01" min="2021-01-01" max="2021-12-31"> -->
+        </div>
+      </section>
+
+      <h2>Tus Datos</h2>
+      <section>
+        <form>
+          <div>
+            <label for="lname">Email</label><br>
+            <div class="input-group mb-2 mr-sm-2">
+              <div class="input-group-prepend">
+                <div class="input-group-text">@</div>
+                <input type="email" id="email" name="email" placeholder="example@example.com" class="form-control"><br>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="col">
+                <label>First Name</label>
+                <input type="text" id="fname" class="form-control" placeholder="First name">
+              </div>
+              <div class="col">
+                <label>Last Name</label>
+                <input type="text" id="lname" class="form-control" placeholder="Last name"><br>
+              </div>
+            </div>
+            <label for="lname">Teléfono móvil</label><br>
+            <input type="tel" id="phone" name="phone" placeholder="(809) 540-8869" class="form-control"
+              maxlength="10"><br>
+        </form>
+      </section>
+
+      <h2>Confirmación</h2>
+      <section>
+        <div id="confirmation_step" class="confirm_appt" style="position: relative; margin-top: 0px;">
+
+          <!-- <ul id="confirm_ul">
+            <li>
+              <label>Servicios:</label><span>DEPILACION CEJAS (precio regular) - 25 minutos
+              </span><br><label>&nbsp;</label><span>Manicure &amp; Pedicure - 70 minutos </span><br>
+            </li>
+            <li>
+              <label>PROVEEDOR:</label>
+              <span>Evelin - Castellana</span>
+            </li>
+            <li>
+              <label>Fecha y hora:</label>
+              <span>Jue Mar 27, 2025, 2:15 pm (AST)</span>
+            </li>
+            <li>
+              <label>Tus datos:</label>
+              <span>
+                <ul>
+                  <li>Franklin A. Toribio Maria</li>
+                  <li>+1 (849) 212-4999</li>
+                  <li>franklintoribio0702@gmail.com</li>
+                </ul>
+              </span>
+            </li>
+            <li></li>
+          </ul> -->
+          <button class="btn btn-primary"  style="text-align: center;" id="confirm_btn">Confirmar Cita</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+
+</html>
