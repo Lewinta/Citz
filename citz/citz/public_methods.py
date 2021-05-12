@@ -102,6 +102,8 @@ def make_sales_order(event_name):
         })
         sales_order.customer = next((event.reference_docname for event in event.event_participants if event.reference_doctype == "Customer"), "")   
         sales_order.delivery_date = datetime.today()
+        sales_order.cost_center = event.cost_center
+        sales_order.event = event.name
         for item in sales_order.items:
             item.qty = 1
         sales_order.save()   
@@ -109,7 +111,8 @@ def make_sales_order(event_name):
 
 
 @frappe.whitelist()
-def make_sales_invoice(source_name, tax_category, mode_of_payment, target_doc=None, ignore_permissions=False):
+def make_sales_invoice(source_name, tax_category, payments, target_doc=None, ignore_permissions=False):
+    payments = json.loads(payments)
     def postprocess(source, target):
         set_missing_values(source, target)
         #Get the advance paid Journal Entries in Sales Invoice Advance
@@ -131,6 +134,9 @@ def make_sales_invoice(source_name, tax_category, mode_of_payment, target_doc=No
 
         if target.company_address:
             target.update(get_fetch_values("Sales Invoice", 'company_address', target.company_address))
+
+        if source.cost_center:
+            target.update({"cost_center": source.cost_center})
 
         # set the redeem loyalty points if provided via shopping cart
         if source.loyalty_points and source.order_type == "Shopping Cart":
@@ -157,7 +163,8 @@ def make_sales_invoice(source_name, tax_category, mode_of_payment, target_doc=No
             "doctype": "Sales Invoice",
             "field_map": {
                 "party_account_currency": "party_account_currency",
-                "payment_terms_template": "payment_terms_template"
+                "payment_terms_template": "payment_terms_template",
+                "event": "event"
             },
             "validation": {
                 "docstatus": ["=", 1]
@@ -181,25 +188,38 @@ def make_sales_invoice(source_name, tax_category, mode_of_payment, target_doc=No
             "add_if_empty": True
         }
     }, target_doc, postprocess, ignore_permissions=ignore_permissions)
-
-    if type(mode_of_payment) == str:
-        mode_of_payment = frappe.get_doc("Mode of Payment", mode_of_payment)
-
     doclist.tax_category = tax_category
-    doclist.payments[0].mode_of_payment = mode_of_payment.name
-    doclist.payments[0].amount = doclist.grand_total
-    doclist.payments[0].type = mode_of_payment.type
-    mop_accounts = [r.default_account for r in mode_of_payment.accounts if r.company == doclist.company]
-    if not mop_accounts:
-        frappe.throw(
-            "Favor especifique una cuenta por defecto en el "
-            "Metodo de Pago {0} para la empresa {1}" \
-                    .format(mode_of_payment.name, doclist.company))
-    doclist.payments[0].account = mop_accounts[0]
-    doclist.payments[0].default = 0
+    doclist.payments = []
+    idx = 1
+    for payment in payments:
+        mode_of_payment = payment['mode_of_payment']
+        if type(mode_of_payment) == str:
+            mode_of_payment = frappe.get_doc("Mode of Payment", mode_of_payment)
+        
+        mop_accounts = [r.default_account for r in mode_of_payment.accounts if r.company == doclist.company]
+        if not mop_accounts:
+            frappe.throw(
+                "Favor especifique una cuenta por defecto en el "
+                "Metodo de Pago {0} para la empresa {1}" \
+                .format(mode_of_payment.name, doclist.company)
+            )
+        doc_payment = frappe.get_doc({
+            'doctype': 'Sales Invoice Payment',
+            'parenttype': 'Sales Invoice',
+            'parentfield': 'payments',
+            'docstatus': 1,
+            'idx': idx,
+            'parent': doclist.name,
+            'mode_of_payment': payment['mode_of_payment'],
+            'amount': payment['amount'],
+            'type': mode_of_payment.type,
+            'default': 0,
+            'account': mop_accounts[0]
+        })
+        doclist.payments.append(doc_payment)
+        idx += 1
 
     doclist.save()
     doclist.submit()
-
     frappe.msgprint("Factura de Venta creada exitosamente!")
     return doclist

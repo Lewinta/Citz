@@ -89,7 +89,11 @@ async function getAvailability({ selected_date, responsible }) {
 
     const hoursAvailable = busyHours.map((item, idx) => {
         // if this busy hour has been used and is not the first item
-        if (item.from == fromTemp && idx > 0) return null
+        if (item.from === fromTemp && idx > 0) return null
+        if (item.from === fromTemp && idx === 0) {
+            fromTemp = item.to
+            return null
+        }
 
         const fromDate = new Date("01/01/1999 " + item.from);
 
@@ -108,7 +112,6 @@ async function getAvailability({ selected_date, responsible }) {
     hoursAvailable.sort(sortHours)
     if (hoursAvailable.length == 0)
         hoursAvailable.push({ from: dateSchedule.opening_time, to: dateSchedule.closing_time })
-    console.log(hoursAvailable)
 
     return hoursAvailable.map((item) => {
         const fromDate = new Date(`01/01/1999 ${item.from}`)
