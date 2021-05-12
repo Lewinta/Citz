@@ -4,7 +4,7 @@ var globalObject = {
         baseHeaders: { "Authorization": "token a9382fe44c435f1:ade7fd03220ab5e" },
         login: "/api/method/login",
         events: "/api/method/citz.citz.public_methods.get_events",
-        services: `/api/resource/Item?filters={"item_group":"Servicios"}&fields=["name","item_name","item_group", "duration", "item_category"]`,
+        services: `/api/resource/Item?filters={"item_group":"Servicios"}&fields=["name","item_name","item_group", "duration", "item_category"]&order_by=item_name&limit_page_length=1000`,
         branches: `/api/method/citz.citz.public_methods.branches`,
         responsibles: `/api/method/citz.citz.public_methods.responsibles`,
         event: '/api/method/citz.citz.public_methods.event'
@@ -61,7 +61,7 @@ function renderBranches(branches) {
 }
 function renderServices(services) {
     globalObject.services = [...services];
-    const categories = new Map()
+    let categories = new Map()
     services.forEach((item, idx) => {
         let category = categories.get(item.item_category || item.item_group);
         if (!category) {
@@ -73,9 +73,8 @@ function renderServices(services) {
                 .append(title)
                 .append(container);
         }
-        category.container.append(`<a class="btn btn-selection service" data-name="${item.name}" data-selected="0" data-duration="${item.duration || 1}" href='#'><b class="service_name">${item.item_name}</b> <span style="float: right;">${item.duration || 1} minutos</span></a>`)
+        category.container.append(`<a class="btn btn-selection service" data-name="${item.name}" data-selected="0" data-duration="${item.duration || 1}" href='#'><b class="service_name"> ${item.item_name}</b> <span style="float: right;">${item.duration || 1} minutos</span></a>`)
     })
-
 }
 
 function addEvents() {
