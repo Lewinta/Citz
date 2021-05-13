@@ -1,0 +1,52 @@
+{
+ "autoname": "format:{parent}-{day_of_week}",
+ "creation": "2021-04-15 11:31:50.131421",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "day_of_week",
+  "opening_time",
+  "closing_time",
+  "is_open"
+ ],
+ "fields": [
+  {
+   "fieldname": "day_of_week",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Day of Week",
+   "options": "Sunday\nMonday\nTuesday\nWednesday\nThursday\nFriday\nSaturday"
+  },
+  {
+   "fieldname": "opening_time",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Opening Time"
+  },
+  {
+   "fieldname": "closing_time",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Closing Time"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_open",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Is Open"
+  }
+ ],
+ "istable": 1,
+ "modified": "2021-05-12 19:19:43.569189",
+ "modified_by": "Administrator",
+ "module": "Citz",
+ "name": "Branch Schedule",
+ "owner": "ftoribio@torquezscript.com",
+ "permissions": [],
+ "quick_entry": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

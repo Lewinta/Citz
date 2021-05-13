@@ -83,13 +83,16 @@ doctype_list_js = {"Customer" : "public/js/customer_list.js"}
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-#	}
-# }
+doc_events = {
+# 	# "*": {
+# 	# 	"on_update": "method",
+# 	# 	"on_cancel": "method",
+# 	# 	"on_trash": "method"
+# 	# }
+    "Employee": {
+        "after_insert": "citz.hook.employee.on_update"
+    }
+}
 
 # Scheduled Tasks
 # ---------------

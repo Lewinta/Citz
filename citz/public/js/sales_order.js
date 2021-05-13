@@ -3,8 +3,8 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
         const frm = this.frm;
         this._super();
         frm.clear_custom_buttons()
-        if (frm.doc.docstatus == 1 && frm.doc.per_billed < 100)
-            frm.add_custom_button(__('New Sales Invoice'), () => { 
+        if (frm.doc.docstatus == 1 && frm.doc.per_billed < 100){
+            let btn = frm.add_custom_button(__('New Sales Invoice'), () => { 
                 const sinv_dialog = new frappe.ui.Dialog({
                     title: 'Enter payment method',
                     fields: [
@@ -22,7 +22,11 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
                             cannot_add_rows: false,
                             in_place_edit: true,
                             reqd: 1,
-                            data: [],
+                            data: [
+                                { "mode_of_payment": "Efectivo", "amount": 0 },
+                                { "mode_of_payment": "Tarjeta", "amount": 0 },
+                                { "mode_of_payment": "Transferencia Bancaria", "amount": 0 }
+                            ],
                             fields: [
                                 {
                                     fieldname: "mode_of_payment", 
@@ -38,10 +42,55 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
                                     in_list_view: 1, 
                                     label: __("Amount"),
                                     options: "currency", 
-                                    reqd: 1
+                                    reqd: 1,
+                                    change: function () {
+                                        let paid_amount = 0;
+                                        $.map(
+                                            cur_dialog.get_value("payments"),
+                                            r => paid_amount += r.amount
+                                        )
+                                        cur_dialog.set_value("paid_amount", paid_amount)
+                                        cur_dialog.set_value("outstanding_amount",
+                                            flt(cur_dialog.get_value("total")) - paid_amount
+                                        
+                                        )
+
+                                    }
                                 }
                             ]
-                        }
+                        },
+                        {
+                            fieldtype: 'Section Break',
+                        },
+                        {
+                            label: __('Total'),
+                            fieldtype: 'Currency',
+                            fieldname: 'total',
+                            read_only: 1,
+                            bold: 1,
+                            default: cur_frm.doc.grand_total,
+                        },
+                        {
+                            fieldtype: 'Column Break',
+                        },
+                        {
+                            label: __('Paid Amount'),
+                            fieldtype: 'Currency',
+                            fieldname: 'paid_amount',
+                            read_only: 1,
+                            bold: 1,
+                        },
+                        {
+                            fieldtype: 'Column Break',
+                        },
+                        {
+                            label: __('Outstanding Amount'),
+                            fieldtype: 'Currency',
+                            fieldname: 'outstanding_amount',
+                            read_only: 1,
+                            bold: 1,
+                        },
+
                     ],
                     primary_action_label: 'Create',
                     primary_action: async (dialog_data) => {
@@ -88,6 +137,8 @@ erpnext.selling.SalesOrderController = erpnext.selling.SellingController.extend(
                 
                 sinv_dialog.show();
             })
+            btn.addClass('btn-primary');
+        }
     }
 })
 

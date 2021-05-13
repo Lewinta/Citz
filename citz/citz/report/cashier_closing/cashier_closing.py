@@ -50,7 +50,7 @@ def get_data(filters=None):
 				0
 			)) as cash,
 			SUM(IF(
-				`tabSales Invoice Payment`.mode_of_payment = 'Tarjetas de credito',
+				`tabSales Invoice Payment`.mode_of_payment = 'Tarjeta',
 				`tabSales Invoice Payment`.amount,
 				0
 			)) as tc, 

@@ -42,6 +42,8 @@ function create_custom_quick_entry() {
                         })
                 })
                 saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+                cur_dialog.doc.customer_name = searchDialog.fields_dict.txt.value
+                cur_dialog.refresh()
             })
     }
     frappe.ui.form.make_quick_entry = custom_quick_entry;
