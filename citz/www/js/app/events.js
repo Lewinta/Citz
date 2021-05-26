@@ -137,5 +137,10 @@ async function getAvailability({ selected_date, responsible }) {
             )   
         })
     }
+
+    if (new Date(globalObject.selected_date).toDateString() == new Date().toDateString()) {
+        const todayHour = new Date().toTimeString().substring(0, 8)
+        hours = hours.filter(hour => hour >= todayHour)
+    }
     return hours
 }
