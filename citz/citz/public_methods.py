@@ -13,12 +13,16 @@ def get_events(date, responsible):
     return frappe.db.sql("""
         SELECT
         starts_on,
-        ends_on
+        ends_on,
+        responsible,
+        status
         FROM `tabEvent`
         WHERE 
         DATE(starts_on) = DATE(%(date)s)
             AND 
         responsible = %(responsible)s
+            AND
+        status = 'Open'
         ORDER BY starts_on ASC
     """, {"date": date, "responsible": responsible}, as_dict = 1)
 
@@ -45,10 +49,11 @@ def responsibles(branch = None):
         responsible['schedule'] = frappe.db.sql(""" 
             SELECT
                 day,
-                from_time,
-                to_time 
+                DATE_FORMAT(from_time, '%%H:%%i:%%S') as from_time, 
+                DATE_FORMAT(to_time, '%%H:%%i:%%S') as to_time
             FROM `tabHealthcare Schedule Time Slot`
-            WHERE parent = %(parent)s 
+            WHERE parent = %(parent)s
+            ORDER BY from_time 
         """, {"parent": responsible.id}, as_dict=1)
     return responsibles
     
@@ -58,8 +63,8 @@ def get_branch_schedule(branch):
     return frappe.db.sql("""
         SELECT 
         day_of_week,
-        opening_time,
-        closing_time,
+        DATE_FORMAT(opening_time, '%%H:%%i:%%S') as opening_time, 
+        DATE_FORMAT(closing_time, '%%H:%%i:%%S') as closing_time, 
         is_open
         FROM `tabBranch Schedule`
         WHERE parent = %(branch)s
@@ -78,7 +83,7 @@ def event(subject, responsible, starts_on, ends_on, description, branch, service
         'branch': branch,
         'send_reminder': 0,
         'event_type': 'Public',
-        'event_items': [frappe._dict({'item_code': s['name'], 'item_name': s['item_name'], 'duration': s['duration']}) for s in services]
+        'event_items': [frappe._dict({'item_code': s['name'], 'item_name': s['item_name'], 'duration': s['duration'], 'qty': s['quantity']}) for s in services]
     })
     newEvent.save(ignore_permissions=True)
     newEvent.reload()
@@ -87,6 +92,17 @@ def event(subject, responsible, starts_on, ends_on, description, branch, service
 @frappe.whitelist()
 def make_sales_order(event_name):
     event = frappe.get_doc("Event", event_name)
+    responsible = frappe.db.sql("SELECT user_id, sales_partner FROM `tabEmployee` WHERE user_id = %(email)s limit 1", 
+                  {'email': event.responsible}, 
+                  as_dict=1)
+
+    if len(responsible) > 0:
+        responsible = responsible[0]
+    else:
+        frappe.throw("{0} no esta registrado como proveedor (Empleado)".format(event.responsible))
+    # Fetching Sales Partner doc
+    sales_partner = frappe.get_doc("Sales Partner", responsible.sales_partner)
+    
     if event: 
         sales_order = get_mapped_doc("Event", event_name, {
             "Event": {
@@ -96,17 +112,20 @@ def make_sales_order(event_name):
                 "doctype": "Sales Order Item",
                 "field_map" : {
                     "item_code": "item_code",
-                    "item_name": "item_name"
+                    "item_name": "item_name",
+                    "qty": "qty"
                 }
             }
         })
+            
         sales_order.customer = next((event.reference_docname for event in event.event_participants if event.reference_doctype == "Customer"), "")   
         sales_order.delivery_date = datetime.today()
         sales_order.cost_center = event.cost_center
         sales_order.event = event.name
-        for item in sales_order.items:
-            item.qty = 1
-        sales_order.save()   
+        sales_order.sales_partner = sales_partner.name
+        sales_order.commission_rate = sales_partner.commission_rate
+        sales_order.save()
+
         return sales_order
 
 
@@ -157,6 +176,8 @@ def make_sales_invoice(source_name, tax_category, payments, target_doc=None, ign
 
             if cost_center:
                 target.cost_center = cost_center
+    def close_related_event(event_name):
+        frappe.db.set_value("Event", event_name, "status", "Closed")
 
     doclist = get_mapped_doc("Sales Order", source_name, {
         "Sales Order": {
@@ -221,5 +242,7 @@ def make_sales_invoice(source_name, tax_category, payments, target_doc=None, ign
 
     doclist.save()
     doclist.submit()
+    if (doclist.event):
+        close_related_event(doclist.event)
     frappe.msgprint("Factura de Venta creada exitosamente!")
     return doclist

@@ -36,7 +36,7 @@ var globalObject = {
 }
 function dumpServices(services) {
     return 'Services: \n' + services.reduce((acc, curr) => {
-        return `${acc}${curr.item_name}\n`
+        return acc + curr.item_name + '\n'
     }, "")
 }
 function renderBranches(branches) {
@@ -59,22 +59,77 @@ function renderBranches(branches) {
         nextStep()
     })
 }
-function renderServices(services) {
-    globalObject.services = [...services];
-    let categories = new Map()
-    services.forEach((item, idx) => {
-        let category = categories.get(item.item_category || item.item_group);
-        if (!category) {
-            title = $(`<h3>${item.item_category || item.item_group}</h3>`);
-            container = $(`<div></div>`);
-            category = { title, container }
-            categories.set(item.item_category || item.item_group, category);
-            $("#services")
-                .append(title)
-                .append(container);
-        }
-        category.container.append(`<a class="btn btn-selection service" data-name="${item.name}" data-selected="0" data-duration="${item.duration || 1}" href='#'><b class="service_name"> ${item.item_name}</b> <span style="float: right;">${item.duration || 1} minutos</span></a>`)
+function renderServices() {
+    globalObject.services.sort((current, next) => {
+        if (current.item_category > next.item_category) return 1
+        if (current.item_category < next.item_category) return -1
+        return 0
     })
+
+    globalObject.services.forEach(item => {
+        const container = $("<div></div>") 
+        container.append(`
+        <a class="btn btn-selection service" 
+            data-name="${item.name}" 
+            data-item-name="${item.item_name}"
+            data-selected="0" 
+            data-duration="${item.duration || 1}" 
+            href='#'
+            style="display: flex;"
+            >
+                <b  class="service_name"
+                    style="display: flex; flex-direction: column; padding-left: 7px;"
+                > 
+                    <span> ${item.item_name} </span>
+                    <span style="font-size:11px; color: gray;">
+                        ${item.item_category || item.item_group}
+                    </span>
+                    <span id='${item.name}' class='norender'>
+                        <input
+                            pattern="[0-9]*"
+                            min=1
+                            style="width:30%; border-radius: 8px;" 
+                            class='service_quantity' 
+                            name='cantidad' 
+                            data-name='${item.name}' 
+                            type='number' 
+                        /> 
+                        <span style="font-size:9px; color: gray;"> Aquí puede variar la cantidad </span> 
+                    </span>                
+                </b> 
+                <span style="margin-left: auto;">${item.duration || 1} minutos </span>
+        </a>`)
+
+        $(".service_quantity").on('click', (e) => {
+            e.stopImmediatePropagation()
+        })
+        $(".service_quantity").on('change', (e) => {
+            e.stopImmediatePropagation()
+            const {name: item_name} = e.target.dataset
+            const service = globalObject.selected_services.find(s => s.name == item_name)
+            const serviceDuration = parseInt($(`a[data-name='${service.name}']`).data("duration"))
+            globalObject.totalDuration -= ( serviceDuration * service.quantity)
+            service.quantity = parseFloat(e.target.value)
+            globalObject.totalDuration += ( serviceDuration * service.quantity)
+            document.getElementById("durationTotal").innerText = `Duración total: ${globalObject.totalDuration} minutos`
+        })
+        $("#services").append(container)
+    })
+    const searchInput = $("<input class='form-control' type='text' name='service-search' id='service-search' value='' placeholder='Buscar...' />")
+    searchInput.on('keyup', function(e) {
+        const _this = $(this)
+         $('#services').find('a.btn-selection').each((idx, tag) => {
+             if (tag.innerText.toLowerCase().includes(_this.val().toLowerCase()) || !_this.val() ) {
+                 $(tag).removeClass('norender')
+             }
+             else {
+                 $(tag).addClass('norender')
+             }
+         })
+    })
+
+    $("#services").prepend(searchInput)
+
 }
 
 function addEvents() {
@@ -85,13 +140,28 @@ function addEvents() {
 
     $(".service").click(function (e) {
         if ($(this).hasClass("selected")) {
-            globalObject.totalDuration += parseInt($(this).data("duration"))
-            globalObject.selected_services.push(globalObject.services.find(s => s.name == $(this).data("name")))
+            const service = {...globalObject.services.find(s => s.name == $(this).data("name"))}
+            const quantitySpan = $(`#${$(this).data('name')}`)
+            quantitySpan.removeClass('norender')
+            const quantityInput = quantitySpan.find('input')[0]
+            
+            if (quantityInput.value) {
+                service.quantity = quantityInput.value
+            }
+            else {
+                service.quantity = 1
+                quantityInput.value = 1
+            }
+
+            globalObject.selected_services.push(service)
+            globalObject.totalDuration += (parseInt($(this).data("duration")) * service.quantity)
         }
         else {
-            globalObject.totalDuration -= parseInt($(this).data("duration"))
-            const service_index = globalObject.selected_services.findIndex(s => s.name == $(this).data("name")) > -1
-            if (service_index) globalObject.selected_services.splice(service_index, 1)
+            $(`#${$(this).data('name')}`).addClass('norender')
+            const service_index = globalObject.selected_services.findIndex(s => s.name == $(this).data("name"))
+            const service = globalObject.selected_services[service_index]
+            globalObject.totalDuration -= (parseInt($(this).data("duration")) * service.quantity)
+            if (service_index > -1) globalObject.selected_services.splice(service_index, 1)
         }
         document.getElementById("durationTotal").innerText = `Duración total: ${globalObject.totalDuration} minutos`
     })
@@ -110,10 +180,13 @@ async function fetchData(entity, method = "GET", headers = null, params = "", bo
         })
         .then(r => r.data || r.message || r)
 }
+
 async function render() {
     $("div.content").css({ "visibility": "hidden" })
+    
+    globalObject.services = [...(await fetchData("services"))];
+    renderServices()
 
-    renderServices(await fetchData("services"))
     renderBranches(await fetchData("branches"))
 
     addEvents()
@@ -192,6 +265,8 @@ function renderDateSection() {
 
                 $("li.hour-button a").click(function (e) {
                     e.preventDefault()
+                    $('.hour-selected').removeClass('hour-selected')
+                    $(this).addClass('hour-selected')
                     globalObject.selected_hour = $(this).data("value")
                     nextStep()
                 })
@@ -205,6 +280,8 @@ function renderUserDataSection() {
 }
 
 function renderConfirmationStep() {
+    $("#confirm_ul").remove()
+    $("#confirm_btn").off()
     const confirmationUl = $(`<ul id="confirm_ul"></ul>`)
     const LiArray = [
         {

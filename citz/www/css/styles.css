@@ -34,7 +34,7 @@ a:visited {
     border-radius: 8px;
     transition: 0.3s;
     text-align: left;
-    cursor: pointer impo !important;
+    cursor: pointer !important;
 }
 
 .service::before {
@@ -99,6 +99,19 @@ a:visited {
     background: #fff;
     border-color: #bbb;
     box-shadow: 0 3px 5px rgb(0 0 0 / 7%);
+}
+
+.hour-selected
+{
+    background-color: #05A;
+    color: white !important; 
+}
+
+@media only screen and (max-width: 768px) {
+    #hourpicker ul li a {
+        padding: 25px;
+        font-size: 11px;
+    }
 }
 
 /* Confirmation Step */
@@ -213,4 +226,10 @@ a:visited {
         flex-flow: column wrap;
         max-width: 700px;
     }
+}
+
+
+/* Omit any tag with this class */
+.norender {
+    display: none !important;
 }

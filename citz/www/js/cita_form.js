@@ -74,11 +74,11 @@ $(function () {
                 }
             });
 
-            $("#services").accordion({
-                collapsible: true,
-                animate: 0,
-                heightStyle: "content"
-            });
+            // $("#services").accordion({
+            //     collapsible: true,
+            //     animate: 0,
+            //     heightStyle: "content"
+            // });
 
             addCustomEvents()
         })

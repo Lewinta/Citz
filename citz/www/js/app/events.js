@@ -63,34 +63,29 @@ async function getAvailability({ selected_date, responsible }) {
 
     const dateSchedule = globalObject.branch.schedule.filter(row => row.name == globalObject.dayOfWeekNames[new Date(selected_date).getDay()])[0]
     const responsibleSchedule = globalObject.responsible.schedule.filter(row => row.day == globalObject.dayOfWeekNames[new Date(selected_date).getDay()])
-
+    console.log(responsibleSchedule)
     if (!dateSchedule || !dateSchedule.is_open)
         return [];
 
     const busyHours = message
-        .filter(row => {
-
-            const from = row["starts_on"].replace(/\d{4}-\d{2}-\d{2}\s+/g, "")
-            const to = row["ends_on"].replace(/\d{4}-\d{2}-\d{2}\s+/g, "")
-            return from >= dateSchedule.opening_time &&
-                to <= dateSchedule.closing_time
-        })
         .map(row => {
-
-            return {
+            const spot = {
                 from: row["starts_on"].replace(/\d{4}-\d{2}-\d{2}\s+/g, ""),
                 to: row["ends_on"].replace(/\d{4}-\d{2}-\d{2}\s+/g, "")
             }
+            return spot
         })
-    busyHours.sort(sortHours)
-    console.log(busyHours)
+        .filter(row => {
+            return row.from >= dateSchedule.opening_time &&
+                row.to <= dateSchedule.closing_time
+        })
 
+    busyHours.sort(sortHours)
     let fromTemp = dateSchedule.opening_time;
 
-    const hoursAvailable = busyHours.map((item, idx) => {
-        // if this busy hour has been used and is not the first item
-        if (item.from === fromTemp && idx > 0) return null
-        if (item.from === fromTemp && idx === 0) {
+    let hoursAvailable = busyHours.map(item => {
+        // if this is also a busy hour return null
+        if (item.from === fromTemp) {
             fromTemp = item.to
             return null
         }
@@ -98,22 +93,27 @@ async function getAvailability({ selected_date, responsible }) {
         const fromDate = new Date("01/01/1999 " + item.from);
 
         fromDate.setMinutes(fromDate.getMinutes() - 1)
-        const result = {
+        const spot = {
             from: fromTemp,
             to: fromDate.toTimeString().substring(0, 8)
         }
 
         fromTemp = item.to
-
-        return result;
+        return spot;
     })
         .filter(item => item)
-        .filter(item => responsibleSchedule.some(responsible_slot => item.from >= responsible_slot.from_time && item.to <= responsible_slot.to_time))
+
+    if (fromTemp < dateSchedule.closing_time)
+        hoursAvailable.push({
+            from: fromTemp,
+            to: dateSchedule.closing_time
+        })
+
     hoursAvailable.sort(sortHours)
     if (hoursAvailable.length == 0)
         hoursAvailable.push({ from: dateSchedule.opening_time, to: dateSchedule.closing_time })
-
-    return hoursAvailable.map((item) => {
+    
+    let hours = hoursAvailable.map((item) => {
         const fromDate = new Date(`01/01/1999 ${item.from}`)
         const toDate = new Date(`01/01/1999 ${item.to}`)
         toDate.setMinutes(toDate.getMinutes() - globalObject.totalDuration)
@@ -124,5 +124,23 @@ async function getAvailability({ selected_date, responsible }) {
         }
         return hours
     })
-        .flat()
+    .flat()
+    if (responsibleSchedule && responsibleSchedule.length > 0) {
+        hours = hours.filter(from_time => {
+            const toDate = new Date(`01/01/1999 ${from_time}`)
+            toDate.setMinutes(toDate.getMinutes() + globalObject.totalDuration)
+            const to_time = toDate.toTimeString().substring(0, 8)
+            return responsibleSchedule.some(schedule => 
+                schedule.from_time <= from_time && schedule.to_time >= from_time
+                && 
+                schedule.from_time <= to_time && schedule.to_time >= to_time
+            )   
+        })
+    }
+
+    if (new Date(globalObject.selected_date).toDateString() == new Date().toDateString()) {
+        const todayHour = new Date().toTimeString().substring(0, 8)
+        hours = hours.filter(hour => hour >= todayHour)
+    }
+    return hours
 }

@@ -24,7 +24,7 @@ frappe.ui.form.on("Event", {
 		frm.remove_custom_button(__('Add Sales Partners'), __("Add Participants"));
 		frm.remove_custom_button(__('Participants'))
 		frm.add_custom_button(__('Add Customer'), function () {
-			new frappe.desk.eventParticipants(frm, "Customer");
+			new customEventParticipants(frm, "Customer");
 		})
 
 		frm.custom_buttons[__('Add Customer')].addClass("btn-primary")
@@ -56,3 +56,37 @@ frappe.ui.form.on("Event", {
 		}
 	}
 });
+
+
+frappe.ui.form.LinkSelector = frappe.ui.form.LinkSelector.extend({
+	make: function() {
+		this._super() 
+		const me = this
+		this.dialog.get_input("txt").on("keyup", function () {
+			me.start = 0;
+			me.search();
+		});
+	}
+});
+
+class customEventParticipants {
+	constructor(frm, doctype) {
+		this.frm = frm;
+		this.doctype = doctype;
+		this.make();
+	}
+
+	make() {
+		let me = this;
+
+		let table = me.frm.get_field("event_participants").grid;
+		me.current_link_selector = new frappe.ui.form.LinkSelector({
+			doctype: me.doctype,
+			dynamic_link_field: "reference_doctype",
+			dynamic_link_reference: me.doctype,
+			fieldname: "reference_docname",
+			target: table,
+			txt: ""
+		});
+	}
+};
