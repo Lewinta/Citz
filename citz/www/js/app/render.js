@@ -67,7 +67,7 @@ function renderServices() {
     })
 
     globalObject.services.forEach(item => {
-        const container = $("<div></div>") 
+        const container = $("<div></div>")
         container.append(`
         <a class="btn btn-selection service" 
             data-name="${item.name}" 
@@ -105,27 +105,27 @@ function renderServices() {
         })
         $(".service_quantity").on('change', (e) => {
             e.stopImmediatePropagation()
-            const {name: item_name} = e.target.dataset
+            const { name: item_name } = e.target.dataset
             const service = globalObject.selected_services.find(s => s.name == item_name)
             const serviceDuration = parseInt($(`a[data-name='${service.name}']`).data("duration"))
-            globalObject.totalDuration -= ( serviceDuration * service.quantity)
+            globalObject.totalDuration -= (serviceDuration * service.quantity)
             service.quantity = parseFloat(e.target.value)
-            globalObject.totalDuration += ( serviceDuration * service.quantity)
+            globalObject.totalDuration += (serviceDuration * service.quantity)
             document.getElementById("durationTotal").innerText = `Duración total: ${globalObject.totalDuration} minutos`
         })
         $("#services").append(container)
     })
     const searchInput = $("<input class='form-control' type='text' name='service-search' id='service-search' value='' placeholder='Buscar...' />")
-    searchInput.on('keyup', function(e) {
+    searchInput.on('keyup', function (e) {
         const _this = $(this)
-         $('#services').find('a.btn-selection').each((idx, tag) => {
-             if (tag.innerText.toLowerCase().includes(_this.val().toLowerCase()) || !_this.val() ) {
-                 $(tag).removeClass('norender')
-             }
-             else {
-                 $(tag).addClass('norender')
-             }
-         })
+        $('#services').find('a.btn-selection').each((idx, tag) => {
+            if (tag.innerText.toLowerCase().includes(_this.val().toLowerCase()) || !_this.val()) {
+                $(tag).removeClass('norender')
+            }
+            else {
+                $(tag).addClass('norender')
+            }
+        })
     })
 
     $("#services").prepend(searchInput)
@@ -140,11 +140,11 @@ function addEvents() {
 
     $(".service").click(function (e) {
         if ($(this).hasClass("selected")) {
-            const service = {...globalObject.services.find(s => s.name == $(this).data("name"))}
+            const service = { ...globalObject.services.find(s => s.name == $(this).data("name")) }
             const quantitySpan = $(`#${$(this).data('name')}`)
             quantitySpan.removeClass('norender')
             const quantityInput = quantitySpan.find('input')[0]
-            
+
             if (quantityInput.value) {
                 service.quantity = quantityInput.value
             }
@@ -183,7 +183,7 @@ async function fetchData(entity, method = "GET", headers = null, params = "", bo
 
 async function render() {
     $("div.content").css({ "visibility": "hidden" })
-    
+
     globalObject.services = [...(await fetchData("services"))];
     renderServices()
 
@@ -219,7 +219,7 @@ async function renderResponsibles(responsibles) {
         const previous = globalObject.responsible;
         globalObject.responsible = responsibles.find((item) => item.name == $(this).data("name"))
 
-        if (JSON.stringify(globalObject.responsible) !== JSON.stringify(previous)){
+        if (JSON.stringify(globalObject.responsible) !== JSON.stringify(previous)) {
             $("#hourpicker .hour-button").remove()
         }
 
@@ -243,33 +243,45 @@ function renderDateSection() {
             minDate: 0,
             // beforeShowDay: unavailable,
             onSelect: async function (dateText, instance) {
+                $("#hourpicker").css({"background-color": "white"})
+                $("#hourpicker ul").css({"display": "block"})
                 $("#hourpicker .hour-button").remove()
-                globalObject.selected_date = `${(instance.selectedMonth + 1) < 10 ? "0" + (instance.selectedMonth + 1): instance.selectedMonth}/${instance.selectedDay}/${instance.selectedYear}`
+                $("#hourpicker > .no-time-spot-message").remove()
+                globalObject.selected_date = `${(instance.selectedMonth + 1) < 10 ? "0" + (instance.selectedMonth + 1) : instance.selectedMonth}/${instance.selectedDay}/${instance.selectedYear}`
                 const hours = await getAvailability({
                     selected_date: globalObject.selected_date,
                     responsible: globalObject.responsible.name
                 })
-                for (let hour of hours) {
-                    const hour_element = $(`<li class="hour-button"><a data-value='${hour}' href='javascript:void(0);'>${new Date('01/01/1999 '+hour).toLocaleTimeString('en-US', { hour: "2-digit", minute: '2-digit' })}</a></li>`);
-                    if (hour < "13:00:00") {
-                        $("ul.morning").append(hour_element)
+                if (hours.length > 0) {
+                    for (let hour of hours) {
+                        const hour_element = $(`<li class="hour-button"><a data-value='${hour}' href='javascript:void(0);'>${new Date('01/01/1999 ' + hour).toLocaleTimeString('en-US', { hour: "2-digit", minute: '2-digit' })}</a></li>`);
+                        if (hour < "13:00:00") {
+                            $("ul.morning").append(hour_element)
+                        }
+                        else if (hour < "17:00:00") {
+                            $("ul.afternoon").append(hour_element)
+                        }
+                        else {
+                            $("ul.evening").append(hour_element)
+                        }
+                        // $("#hourpicker").append(`<div class="hour-button" data-value="${hour}" >${new Date(`2000-01-01 ${hour}`).toLocaleTimeString()}</div>`)
                     }
-                    else if (hour < "17:00:00") {
-                        $("ul.afternoon").append(hour_element)
-                    }
-                    else {
-                        $("ul.evening").append(hour_element)
-                    }
-                    // $("#hourpicker").append(`<div class="hour-button" data-value="${hour}" >${new Date(`2000-01-01 ${hour}`).toLocaleTimeString()}</div>`)
+                    $("li.hour-button a").click(function (e) {
+                        e.preventDefault()
+                        $('.hour-selected').removeClass('hour-selected')
+                        $(this).addClass('hour-selected')
+                        globalObject.selected_hour = $(this).data("value")
+                        nextStep()
+                    })
+                }
+                else {
+                    $("#hourpicker").css({ "background-color": "lightgray" })
+                    $("#hourpicker ul").css({"display": "none"})
+                    $("#hourpicker").prepend("<div class='no-time-spot-message'>No hay horarios disponibles para este día.</div>")
                 }
 
-                $("li.hour-button a").click(function (e) {
-                    e.preventDefault()
-                    $('.hour-selected').removeClass('hour-selected')
-                    $(this).addClass('hour-selected')
-                    globalObject.selected_hour = $(this).data("value")
-                    nextStep()
-                })
+
+
             }
         });
     }
