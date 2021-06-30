@@ -44,7 +44,23 @@ def branches():
     return branches
 @frappe.whitelist()
 def responsibles(branch = None):
-    responsibles = frappe.db.sql("SELECT name as id, user_id as name, first_name, last_name, branch from `tabEmployee` WHERE (branch = %(branch)s or '' = %(branch)s) and user_id != ''", {"branch": branch or ""}, as_dict=1)
+    designation = "Tecnico Esteticista"
+    responsibles = frappe.db.sql("""
+        SELECT 
+            name as id,
+            user_id as name,
+            first_name,
+            last_name,
+            branch 
+        FROM 
+            `tabEmployee` 
+        WHERE 
+            (branch = %(branch)s or '' = %(branch)s) 
+        AND
+            designation = %(designation)s 
+        AND 
+            user_id != ''
+    """, {"branch": branch or "", "designation": designation}, as_dict=1)
     for responsible in responsibles:
         responsible['schedule'] = frappe.db.sql(""" 
             SELECT
@@ -71,7 +87,7 @@ def get_branch_schedule(branch):
     """, {'branch': branch}, as_dict=1)
 
 @frappe.whitelist()
-def event(subject, responsible, starts_on, ends_on, description, branch, services):
+def event(subject, responsible, starts_on, ends_on, description, branch, customer_email, services):
     services = json.loads(services)
     newEvent = frappe.get_doc({
         'doctype': 'Event', 
@@ -81,6 +97,7 @@ def event(subject, responsible, starts_on, ends_on, description, branch, service
         'ends_on': ends_on,
         'description': description,
         'branch': branch,
+        'customer_email': customer_email,
         'send_reminder': 0,
         'event_type': 'Public',
         'event_items': [frappe._dict({'item_code': s['name'], 'item_name': s['item_name'], 'duration': s['duration'], 'qty': s['quantity']}) for s in services]

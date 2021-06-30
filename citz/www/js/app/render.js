@@ -1,10 +1,11 @@
 var globalObject = {
     api: {
         BaseUri: "",
-        baseHeaders: { "Authorization": "token a9382fe44c435f1:ade7fd03220ab5e" },
+        // baseHeaders: { "Authorization": "token a9382fe44c435f1:ade7fd03220ab5e" },
+        baseHeaders: { "Authorization": "token a9382fe44c435f1:a33710cd0fba27f" },
         login: "/api/method/login",
         events: "/api/method/citz.citz.public_methods.get_events",
-        services: `/api/resource/Item?filters={"item_group":"Servicios de Venta", "disabled":0}&fields=["name","item_name","item_group", "duration", "item_category"]&order_by=item_name&limit_page_length=1000`,
+        services: `/api/resource/Item?filters={"item_group":"Servicios", "disabled":0, "is_sales_item":1}&fields=["name","item_name","item_group", "duration", "item_category"]&order_by=item_name&limit_page_length=1000`,
         branches: `/api/method/citz.citz.public_methods.branches`,
         responsibles: `/api/method/citz.citz.public_methods.responsibles`,
         event: '/api/method/citz.citz.public_methods.event'
@@ -287,9 +288,7 @@ function renderDateSection() {
     }
 }
 
-function renderUserDataSection() {
-
-}
+function renderUserDataSection() {}
 
 function renderConfirmationStep() {
     $("#confirm_ul").remove()

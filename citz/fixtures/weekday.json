@@ -1,0 +1,72 @@
+[
+ {
+  "day": "Monday",
+  "docstatus": 0,
+  "doctype": "Weekday",
+  "modified": "2021-06-05 21:50:27.015610",
+  "name": "Monday",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ },
+ {
+  "day": "Tuesday",
+  "docstatus": 0,
+  "doctype": "Weekday",
+  "modified": "2021-06-05 21:50:45.027616",
+  "name": "Tuesday",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ },
+ {
+  "day": "Wednesday",
+  "docstatus": 0,
+  "doctype": "Weekday",
+  "modified": "2021-06-05 21:51:13.613298",
+  "name": "Wednesday",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ },
+ {
+  "day": "Friday",
+  "docstatus": 0,
+  "doctype": "Weekday",
+  "modified": "2021-06-05 21:51:24.219796",
+  "name": "Friday",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ },
+ {
+  "day": "Saturday",
+  "docstatus": 0,
+  "doctype": "Weekday",
+  "modified": "2021-06-05 21:51:38.588101",
+  "name": "Saturday",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ },
+ {
+  "day": "Sunday",
+  "docstatus": 0,
+  "doctype": "Weekday",
+  "modified": "2021-06-05 21:51:48.481312",
+  "name": "Sunday",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ },
+ {
+  "day": "Thursday",
+  "docstatus": 0,
+  "doctype": "Weekday",
+  "modified": "2021-06-05 21:54:48.350340",
+  "name": "Thursday",
+  "parent": null,
+  "parentfield": null,
+  "parenttype": null
+ }
+]

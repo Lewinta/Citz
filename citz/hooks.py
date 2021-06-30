@@ -27,14 +27,58 @@ app_license = "MIT"
 
 # include js in doctype views
 doctype_js = {
-    "Event" : "public/js/event.js",
-    "Sales Invoice": "public/js/sales_invoice.js",
-    "Sales Order": "public/js/sales_order.js"
+	"Event" : "public/js/event.js",
+	"Employee" : "public/js/employee.js",
+	"Sales Invoice": "public/js/sales_invoice.js",
+	"Sales Order": "public/js/sales_order.js"
 }
 doctype_list_js = {"Customer" : "public/js/customer_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
 
+# Fixtures
+# ----------
+fixtures = [
+	{
+		"doctype": "Weekday",
+		"filters": {
+			"name": (
+				"in", (
+					"Monday",
+					"Tuesday",
+					"Wednesday",
+					"Thursday",
+					"Friday",
+					"Saturday",
+					"Sunday",
+				)
+			)
+		}
+	},
+	{
+		"doctype": "Translation",
+		"filters": {
+			"name": (
+				"in", (
+					"9caff7a137",
+					"b98fa676dd",
+					"36c4710498",
+					"0143614f19",
+					"23ecf385a6",
+					"9d807ef20f",
+					"b919fa56f3",
+					"370c21dab4",
+					"ff98067489",
+					"d3cd4fb007",
+					"17968bcae1",
+					"3497187195",
+					"2bf178db6a",
+					"7f55287301",
+				)
+			)
+		}
+	}
+]
 # Home Pages
 # ----------
 
@@ -89,9 +133,10 @@ doc_events = {
 # 	# 	"on_cancel": "method",
 # 	# 	"on_trash": "method"
 # 	# }
-    "Employee": {
-        "after_insert": "citz.hook.employee.on_update"
-    }
+	"Employee": {
+		"validate": "citz.hook.employee.validate",
+		"after_insert": "citz.hook.employee.on_update",
+	}
 }
 
 # Scheduled Tasks
