@@ -23,6 +23,7 @@ function getEventPayload() {
     ends_on: `${endDate.getFullYear()}-${endDate.getMonth()+1<10 ? "0"+(endDate.getMonth()+1) : endDate.getMonth()}-${endDate.getDate()} ${endDate.toTimeString().substring(0, 8)}`,
     responsible: globalObject.responsible.name,
     branch: globalObject.branch.name,
+    customer_email: $("#email").val(),
     description: dumpServices(globalObject.selected_services),
     services: JSON.stringify(globalObject.selected_services)
   };
