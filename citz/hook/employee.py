@@ -21,3 +21,4 @@ def on_update(doc, method):
     sales_partner.commission_rate = 12.00
     sales_partner.partner_type = "Agent"
     sales_partner.insert(ignore_mandatory=True)
+    

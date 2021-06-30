@@ -137,6 +137,9 @@ async function getAvailability({ selected_date, responsible }) {
             )   
         })
     }
+    else {
+        hours = []
+    }
 
     if (new Date(globalObject.selected_date).toDateString() == new Date().toDateString()) {
         const todayHour = new Date().toTimeString().substring(0, 8)
