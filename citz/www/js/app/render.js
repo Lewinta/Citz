@@ -276,9 +276,7 @@ function renderDateSection() {
     }
 }
 
-function renderUserDataSection() {
-
-}
+function renderUserDataSection() {}
 
 function renderConfirmationStep() {
     $("#confirm_ul").remove()
